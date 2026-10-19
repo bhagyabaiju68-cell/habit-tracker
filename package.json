@@ -1,0 +1,20 @@
+{
+  "name": "habit-tracker-v2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "check": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "sync-request-curl": "^5.0.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.11"
+  }
+}
