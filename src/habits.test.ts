@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from 'vitest';
-import { addHabit, listHabits, clear } from './habits.ts';
+import { addHabit, listHabits, checkIn, listCheckins, clear } from './habits.ts';
 
 beforeEach(() => {
     clear();
@@ -33,6 +33,53 @@ describe('listHabits', () => {
                 { habitId: expect.any(Number), name: 'Eat fruits' },
                 { habitId: expect.any(Number), name: 'Read' },
             ],
+        });
+    });
+});
+
+describe('checkIn', () => {
+    test('valid check-in return', () => {
+        const habit = addHabit('Read') as { habitId: number };
+        expect(checkIn(habit.habitId, '2026-10-20', '2026-10-26')).toStrictEqual({});
+    });
+    test('unknown habitId is an error', () => {
+        expect(checkIn(999, '2026-10-20', '2026-10-26')).toStrictEqual({ error: expect.any(String) });
+    });
+    test.each([
+        ['2026-13-01'],
+        ['2026-02-30'],
+        ['26-10-20'],
+        ['hello'],
+    ])('invalid date %s is an error', (date) => {
+        const habit = addHabit('Read') as { habitId: number };
+        expect(checkIn(habit.habitId, date, '2026-10-26')).toStrictEqual({ error: expect.any(String) });
+    });
+    test('future date is an error', () => {
+        const habit = addHabit('Read') as { habitId: number };
+        expect(checkIn(habit.habitId, '2026-10-27', '2026-10-26')).toStrictEqual({ error: expect.any(String) });
+    });
+    test('today is allowed', () => {
+        const habit = addHabit('Read') as { habitId: number };
+        expect(checkIn(habit.habitId, '2026-10-26', '2026-10-26')).toStrictEqual({});
+    });
+    test('same date twice is an error', () => {
+        const habit = addHabit('Read') as { habitId: number };
+        checkIn(habit.habitId, '2026-10-20', '2026-10-26');
+        expect(checkIn(habit.habitId, '2026-10-20', '2026-10-26')).toStrictEqual({ error: expect.any(String) });
+    });
+});
+
+describe('listCheckins', () => {
+    test('unknown habitId is an error', () => {
+        expect(listCheckins(999)).toStrictEqual({ error: expect.any(String) });
+    });
+    test('returns dates sorted oldest first', () => {
+        const habit = addHabit('Read') as { habitId: number };
+        checkIn(habit.habitId, '2026-10-22', '2026-10-26');
+        checkIn(habit.habitId, '2026-10-20', '2026-10-26');
+        checkIn(habit.habitId, '2026-10-21', '2026-10-26');
+        expect(listCheckins(habit.habitId)).toStrictEqual({
+            checkins: ['2026-10-20', '2026-10-21', '2026-10-22'],
         });
     });
 });
