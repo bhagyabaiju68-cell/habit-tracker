@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach } from 'vitest';
-import { addHabit, listHabits, checkIn, listCheckins, clear } from './habits.ts';
+import { addHabit, listHabits, checkIn, listCheckins, getStreaks, clear } from './habits.ts';
 
 beforeEach(() => {
     clear();
@@ -81,5 +81,57 @@ describe('listCheckins', () => {
         expect(listCheckins(habit.habitId)).toStrictEqual({
             checkins: ['2026-10-20', '2026-10-21', '2026-10-22'],
         });
+    });
+});
+
+describe('getStreaks', () => {
+    const today = '2026-10-20';
+    test('no check-ins', () => {
+        addHabit('Read');
+        expect(getStreaks(1, today)).toStrictEqual({ current: 0, longest: 0 });
+    });
+    test('only today', () => {
+        addHabit('Read');
+        checkIn(1, '2026-10-20', today);
+        expect(getStreaks(1, today)).toStrictEqual({ current: 1, longest: 1 });
+    });
+    test('3 days in a row', () => {
+        addHabit('Read');
+        checkIn(1, '2026-10-18', today);
+        checkIn(1, '2026-10-19', today);
+        checkIn(1, '2026-10-20', today);
+        expect(getStreaks(1, today)).toStrictEqual({ current: 3, longest: 3 });
+    });
+    test('today not done yet keeps streak', () => {
+        addHabit('Read');
+        checkIn(1, '2026-10-18', today);
+        checkIn(1, '2026-10-19', today);
+        expect(getStreaks(1, today)).toStrictEqual({ current: 2, longest: 2 });
+    });
+    test('gap breaks current streak', () => {
+        addHabit('Read');
+        checkIn(1, '2026-10-17', today);
+        checkIn(1, '2026-10-18', today);
+        expect(getStreaks(1, today)).toStrictEqual({ current: 0, longest: 2 });
+    });
+    test('longest is an older run', () => {
+        addHabit('Read');
+        checkIn(1, '2026-10-14', today);
+        checkIn(1, '2026-10-15', today);
+        checkIn(1, '2026-10-16', today);
+        checkIn(1, '2026-10-17', today);
+        checkIn(1, '2026-10-19', today);
+        checkIn(1, '2026-10-20', today);
+        expect(getStreaks(1, today)).toStrictEqual({ current: 2, longest: 4 });
+    });
+    test('works across months', () => {
+        addHabit('Read');
+        checkIn(1, '2026-09-30', '2026-10-01');
+        checkIn(1, '2026-10-01', '2026-10-01');
+        expect(getStreaks(1, '2026-10-01')).toStrictEqual({ current: 2, longest: 2 });
+    });
+    test('unknown habit is an error', () => {
+        addHabit('Read');
+        expect(getStreaks(2, today)).toStrictEqual({ error: expect.any(String) });
     });
 });

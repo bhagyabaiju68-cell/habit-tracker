@@ -33,6 +33,12 @@ function isValidDate(date: string) {
     return true;
 }
 
+function addDays(date: string, n: number) {
+    const d = new Date(date + 'T00:00:00Z');
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
+}
+
 export function addHabit(name: string) {
     if (name === '') {
         return { error: 'Name cannot be empty' };
@@ -84,6 +90,36 @@ export function listCheckins(habitId: number) {
     const sorted = habit.checkins.slice().sort();
     return { checkins: sorted };
 }
+
+export function getStreaks(habitId: number, today: string) {
+    const habit = findHabit(habitId);
+    if (habit === undefined) {
+        return { error: 'Habit not found' };
+    }
+    let current = 0;
+    let day = today;
+    if (!habit.checkins.includes(today)) {
+        day = addDays(today, -1);
+    }
+    while (habit.checkins.includes(day)) {
+        current++;
+        day = addDays(day, -1);
+    }
+    const sorted = habit.checkins.slice().sort();
+    let longest = 0;
+    let run = 0;
+    for (let i = 0; i < sorted.length; i++) {
+        if (i > 0 && sorted[i] === addDays(sorted[i - 1], 1)) {
+            run = run + 1;
+        } else {
+            run = 1;
+        }
+        if (run > longest) {
+            longest = run;
+        }
+    }
+    return { current: current, longest: longest };
+} 
 
 export function clear() {
     habits = [];

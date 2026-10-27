@@ -1,5 +1,5 @@
 import express from 'express';
-import { addHabit, listHabits, checkIn, listCheckins } from './habits.ts';
+import { addHabit, listHabits, checkIn, listCheckins, getStreaks } from './habits.ts';
 
 const app = express();
 app.use(express.json());
@@ -42,6 +42,15 @@ app.post('/habits/:habitId/checkins', (req, res) => {
 app.get('/habits/:habitId/checkins', (req, res) => {
     const habitId = Number(req.params.habitId);
     const result = listCheckins(habitId);
+    if ('error' in result) {
+        res.status(400).json(result);
+        return;
+    }
+    res.json(result);
+});
+
+app.get('/habits/:habitId/streaks', (req, res) => {
+    const result = getStreaks(Number(req.params.habitId), todayString());
     if ('error' in result) {
         res.status(400).json(result);
         return;
